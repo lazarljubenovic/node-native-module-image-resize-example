@@ -1,41 +1,45 @@
-#include <node.h>
+#include <nan.h>
+#include <iostream>
+#include <vector>
+#include <string>
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+
+#define print(s) std::cout << s << std::endl
+#define printHex(s) std::cout << std::hex << s << std::dec << std::endl
 
 const int maxValue = 10;
 int numberOfCalls = 0;
 
-void WhoAmI(const v8::FunctionCallbackInfo<v8::Value>& args) {
-  v8::Isolate* isolate = args.GetIsolate();
-  auto message = v8::String::NewFromUtf8(isolate, "わたしはノード・ヒーロです！");
-  args.GetReturnValue().Set(message);
-}
+NAN_METHOD(invert) {
+  Nan::Utf8String fileNameParam(info[0]->ToString());
+  auto fileName = std::string(*fileNameParam);
+  print(fileName);
 
-void Increment(const v8::FunctionCallbackInfo<v8::Value>& args) {
-  v8::Isolate* isolate = args.GetIsolate();
+  int x, y, n;
+  unsigned char *data = stbi_load(fileName.c_str(), &x, &y, &n, 0);
+  const unsigned int length = x * y;
 
-  if (!args[0]->IsNumber()) {
-    isolate->ThrowException(v8::Exception::TypeError(
-      v8::String::NewFromUtf8(isolate, "Aagumento massuto bii a nanbaa")
-    ));
-    return;
+  std::vector<char> newData;
+  for (int i = 0; i < length; i++) {
+    newData.push_back(0xFF - data[n * i]);
+    newData.push_back(0xFF - data[n * i + 1]);
+    newData.push_back(0xFF - data[n * i + 2]);
+    newData.push_back(data[n * i + 3]);
   }
 
-  double argsValue = args[0]->NumberValue();
-  if (numberOfCalls + argsValue > maxValue) {
-    isolate->ThrowException(v8::Exception::Error(
-      v8::String::NewFromUtf8(isolate, "Kauntaa vento fruu za rufu")
-    ));
-    return;
-  }
+  int status = stbi_write_jpg("./images/test.jpg", x, y, n, newData.data(), 80);
+  print(status);
+  // auto retVal = Nan::CopyBuffer((char *) newData.data(), newData.size()).ToLocalChecked();
+  // info.GetReturnValue().Set(retVal);
 
-  numberOfCalls += argsValue;
-
-  auto currentNumberOfCalls = v8::Number::New(isolate, static_cast<double>(numberOfCalls));
-  args.GetReturnValue().Set(currentNumberOfCalls);
+  stbi_image_free(data);
 }
 
-void Initialize(v8::Local<v8::Object> exports) {
-  NODE_SET_METHOD(exports, "whoami", WhoAmI);
-  NODE_SET_METHOD(exports, "increment", Increment);
+NAN_MODULE_INIT(Initialize) {
+  NAN_EXPORT(target, invert);
 }
 
-NODE_MODULE(module_name, Initialize);
+NODE_MODULE(addon, Initialize);
