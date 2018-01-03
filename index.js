@@ -1,7 +1,7 @@
 const imeeji = require('bindings')('addon')
 const fs = require('fs')
 
-const THUMB_SIZE = 100
+const THUMB_SIZE = 4
 
 const folder = process.cwd()
 // const folder = __dirname
