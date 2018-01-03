@@ -1,6 +1,8 @@
 const imeeji = require('bindings')('addon')
 const fs = require('fs')
 
+const THUMB_SIZE = 100
+
 const folder = process.cwd()
 // const folder = __dirname
 
@@ -18,5 +20,5 @@ function walk(folder, fn) {
 }
 
 walk(folder, (imageFileName) => {
-  imeeji.invert(imageFileName)
+  imeeji.invert(imageFileName, THUMB_SIZE)
 })

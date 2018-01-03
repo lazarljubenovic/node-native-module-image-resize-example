@@ -7,21 +7,28 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-#define THUMB_SIZE 100
-
 #define print(s) std::cout << s << std::endl
 #define printHex(s) std::cout << std::hex << s << std::dec << std::endl
 
 NAN_METHOD(invert) {
 
-  // Typecheck the first (and only) argument from function call
+  // Typecheck the first argument from function call
   if (!info[0]->IsString()) {
-    Nan::ThrowTypeError("Argument must be a string");
+    Nan::ThrowTypeError("First argument must be a string");
+    return;
+  }
+
+  // Typecheck the secone argument from function call
+  if (!info[1]->IsNumber()) {
+    Nan::ThrowTypeError("Second argument must be a number");
     return;
   }
 
   // First argument from JavaScript, should be a string
   Nan::Utf8String fileNameParam(info[0]->ToString());
+
+  // Second argument from JavaScript, should be a number
+  int thumbSize(info[1]->NumberValue());
 
   // Cast to std::string
   auto fileName = std::string(*fileNameParam);
@@ -43,18 +50,24 @@ NAN_METHOD(invert) {
 
   // first two dimensions are raster matrix
   // third dimension represents components of a single pixel (eg. rgba)
-  int avgData[THUMB_SIZE][THUMB_SIZE][n] = {{{}}};
-
-  // count of pixels (corresponds to avgData)
-  int avgCount[THUMB_SIZE][THUMB_SIZE] = {{}};
-
-  // Set everything to zero
-  for (int i = 0; i < THUMB_SIZE; i++) {
-    for (int j = 0; j < THUMB_SIZE; j++) {
-      avgCount[i][j] = 0;
+  // int avgData[thumbSize][thumbSize][n] = {{{}}};
+  int*** avgData = new int**[thumbSize];
+  for (int i = 0; i < thumbSize; i++) {
+    avgData[i] = new int*[thumbSize];
+    for (int j = 0; j < thumbSize; j++) {
+      avgData[i][j] = new int[n];
       for (int k = 0; k < n; k++) {
         avgData[i][j][k] = 0;
       }
+    }
+  }
+
+  // count of pixels (corresponds to avgData)
+  int** avgCount = new int*[thumbSize];
+  for (int i = 0; i < thumbSize; i++) {
+    avgCount[i] = new int[thumbSize];
+    for (int j = 0; j < thumbSize; j++) {
+      avgCount[i][j] = 0;
     }
   }
 
@@ -68,9 +81,9 @@ NAN_METHOD(invert) {
     int i = k / x;
     int j = k % x;
 
-    // we need to divide rows and columns in THUMB_SIZE equal areas
-    int avgI = THUMB_SIZE * i / y;
-    int avgJ = THUMB_SIZE * j / x;
+    // we need to divide rows and columns in thumbSize equal areas
+    int avgI = thumbSize * i / y;
+    int avgJ = thumbSize * j / x;
 
     // we keep count of number of pixels in each area
     avgCount[avgI][avgJ]++;
@@ -83,8 +96,8 @@ NAN_METHOD(invert) {
 
   // data for new (resized) image where we push sum/count (=avg)
   std::vector<char> newData;
-  for (int i = 0; i < THUMB_SIZE; i++) {
-    for (int j = 0; j < THUMB_SIZE; j++) {
+  for (int i = 0; i < thumbSize; i++) {
+    for (int j = 0; j < thumbSize; j++) {
       for (int k = 0; k < n; k++) {
         newData.push_back(avgData[i][j][k] / avgCount[i][j]);
       }
@@ -93,7 +106,7 @@ NAN_METHOD(invert) {
 
   // Save resized image into a folder next to folder of images
   std::string resizedFileName = "../resized/" + fileName;
-  int status = stbi_write_jpg(resizedFileName.c_str(), THUMB_SIZE, THUMB_SIZE, n, newData.data(), 80);
+  int status = stbi_write_jpg(resizedFileName.c_str(), thumbSize, thumbSize, n, newData.data(), 80);
 
   if (status == 0) {
     print("There was an error saving the image. Skipping...");
@@ -101,6 +114,8 @@ NAN_METHOD(invert) {
   }
 
   stbi_image_free(data);
+
+  print("Successfully resized image.");
 }
 
 NAN_MODULE_INIT(Initialize) {
