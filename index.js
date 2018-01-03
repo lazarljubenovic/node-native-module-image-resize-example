@@ -1,7 +1,22 @@
 const imeeji = require('bindings')('addon')
 const fs = require('fs')
 
-const imageFileName = 'image1.bmp'
-const buffer = fs.readFileSync(`./images/${imageFileName}`)
-imeeji.invert(`./images/${imageFileName}`)
-// fs.writeFileSync(`./images/negative-${imageFileName}`, newBuffer)
+const folder = process.cwd()
+// const folder = __dirname
+
+function walk(folder, fn) {
+  fs.readdirSync(folder).forEach(item => {
+    const stat = fs.lstatSync(item)
+    if (stat.isDirectory(stat)) {
+      walk(item)
+    } else if (stat.isFile(stat)) {
+      fn(item)
+    } else {
+      console.error(`Taj tvoj Linux!`)
+    }
+  })
+}
+
+walk(folder, (imageFileName) => {
+  imeeji.invert(imageFileName)
+})

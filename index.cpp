@@ -7,16 +7,10 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
+#define THUMB_SIZE 100
+
 #define print(s) std::cout << s << std::endl
 #define printHex(s) std::cout << std::hex << s << std::dec << std::endl
-
-struct RGB {
-  unsigned int R;
-  unsigned int G;
-  unsigned int B;
-  unsigned int A;
-  unsigned int count;
-};
 
 const int maxValue = 10;
 int numberOfCalls = 0;
@@ -36,48 +30,35 @@ NAN_METHOD(invert) {
   }
 
   const unsigned int length = x * y;
-  auto avgData = new RGB[3][3];
-
-  for (int i = 0; i < 3; i++) {
-    for (int j = 0; j < 3; j++) {
-      RGB tmp_info = {};
-      avgData[i][j] = tmp_info;
-    }
-  }
+  int avgData[THUMB_SIZE][THUMB_SIZE][n] = {0};
+  int avgCount[THUMB_SIZE][THUMB_SIZE] = {0};
 
   for (int k = 0; k < length; k++) {
     int pixelIndex = k * n;
     int i = k / x;
     int j = k % x;
 
-    int avgI = 3 * i / y;
-    int avgJ = 3 * j / x;
-    avgData[avgI][avgJ].count++;
-    avgData[avgI][avgJ].R += data[pixelIndex];
-    avgData[avgI][avgJ].G += data[pixelIndex + 1];
-    avgData[avgI][avgJ].B += data[pixelIndex + 2];
-    avgData[avgI][avgJ].A += data[pixelIndex + 3];
-  }
+    int avgI = THUMB_SIZE * i / y;
+    int avgJ = THUMB_SIZE * j / x;
 
-  std::vector<char> newData;
-  for (int i = 0; i < 3; i++) {
-    print("I");
-    print(i);
-    for (int j = 0; j < 3; j++) {
-      RGB tmp_info = avgData[i][j];
-      print("Count");
-      print(tmp_info.count);
-      newData.push_back(tmp_info.R / tmp_info.count);
-      newData.push_back(tmp_info.G / tmp_info.count);
-      newData.push_back(tmp_info.B / tmp_info.count);
-      newData.push_back(tmp_info.A / tmp_info.count);
-      print((int)tmp_info.R);
+    avgCount[avgI][avgJ]++;
+    for (int componentIndex = 0; componentIndex < n; componentIndex++) {
+      avgData[avgI][avgJ][componentIndex] += data[pixelIndex + componentIndex];
     }
   }
 
+  std::vector<char> newData;
+  for (int i = 0; i < THUMB_SIZE; i++) {
+    for (int j = 0; j < THUMB_SIZE; j++) {
+      for (int k = 0; k < n; k++) {
+        newData.push_back(avgData[i][j][k] / avgCount[i][j]);
+      }
+    }
+  }
 
-  int status = stbi_write_jpg("./images/test.jpg", 3, 3, n, newData.data(), 80);
-  print(status);
+  std::string invertedFileName = "../invert/" + fileName;
+  int status = stbi_write_jpg(invertedFileName.c_str(), THUMB_SIZE, THUMB_SIZE, n, newData.data(), 80);
+  // print(status);
 
   if (status == 0) {
     // todo
@@ -86,11 +67,6 @@ NAN_METHOD(invert) {
   }
 
   stbi_image_free(data);
-
-  // for (int i = 0; i < 3; i++) {
-  //   delete avgData[i];
-  // }
-  // delete [] avgData;
 }
 
 NAN_MODULE_INIT(Initialize) {
