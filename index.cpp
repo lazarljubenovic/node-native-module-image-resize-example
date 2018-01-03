@@ -30,8 +30,26 @@ NAN_METHOD(invert) {
   }
 
   const unsigned int length = x * y;
-  int avgData[THUMB_SIZE][THUMB_SIZE][n] = {0};
-  int avgCount[THUMB_SIZE][THUMB_SIZE] = {0};
+  int avgData[THUMB_SIZE][THUMB_SIZE][n] = {{{}}};
+  int avgCount[THUMB_SIZE][THUMB_SIZE] = {{}};
+
+  for (int i = 0; i < THUMB_SIZE; i++) {
+    for (int j = 0; j < THUMB_SIZE; j++) {
+      for (int k = 0; k < n; k++) {
+        avgData[i][j][k] = 0;
+      }
+    }
+  }
+
+  for (int i = 0; i < THUMB_SIZE; i++) {
+    for (int j = 0; j < THUMB_SIZE; j++) {
+      avgCount[i][j] = 0;
+    }
+  }
+
+  print(avgData[0][0][0]);
+  print(avgData[10][11][2]);
+  print(avgData[THUMB_SIZE - 1][THUMB_SIZE - 1][n - 1]);
 
   for (int k = 0; k < length; k++) {
     int pixelIndex = k * n;
