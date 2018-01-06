@@ -31,8 +31,8 @@ app.get('/', (req, res) => {
   Object.keys(base64).forEach(fileName => {
     const fileBase64 = base64[fileName]
     html += `<img style="background-image: url(data:image/jpg;base64,${fileBase64}); background-size: cover; background-repeat: no-repeat; background-position: center center"
-                    src="/images/${fileName}"
-                    width="300"
+                  src="/images/${fileName}"
+                  width="300"
              >`
   })
   res.send(html)

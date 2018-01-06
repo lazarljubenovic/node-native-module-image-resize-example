@@ -1,4 +1,4 @@
-const imeeji = require('bindings')('addon')
+const resizer = require('bindings')('addon')
 const fs = require('fs')
 
 const THUMB_SIZE = 4
@@ -20,5 +20,5 @@ function walk(folder, fn) {
 }
 
 walk(folder, (imageFileName) => {
-  imeeji.invert(imageFileName, THUMB_SIZE)
+  resizer.invert(imageFileName, THUMB_SIZE)
 })
