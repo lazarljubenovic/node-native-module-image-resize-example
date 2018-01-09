@@ -33,3 +33,7 @@ node server.js   # a simple express server tha demonstrates the effect
 The effect should look something like the following:
 
 ![Example in action](https://i.imgur.com/XyCVedY.png)
+
+---
+
+[The accompanying **slides** are here.](https://docs.google.com/presentation/d/1r0TiVRhH-aNOCGe71y9MuiZhzuVhl-LtUfBAsmFkmKE/edit?usp=sharing)
